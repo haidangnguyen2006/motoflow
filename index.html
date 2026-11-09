@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#070B14" />
+<title>MotoFlow — AI dự báo ùn tắc &amp; điều phối đèn tín hiệu thích ứng</title>
+<meta name="description" content="Prototype mobile + bảng điều hành cho hệ thống dự báo ùn tắc ngắn hạn và tối ưu tín hiệu đèn giao thông thích ứng tại TP.HCM." />
+<link rel="stylesheet" href="fonts/fonts.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body data-theme="dark" data-screen="home" data-scenario="normal" data-mode="app">
+
+<!-- ============================ ICON SPRITE ============================ -->
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="m9 4-6 2.5v13L9 17l6 2.5 6-2.5v-13L15 7 9 4Z"/><path d="M9 4v13M15 7v12.5"/></symbol>
+  <symbol id="i-signal" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="4"/><circle cx="12" cy="7.5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="16.5" r="1.6"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 2 6.5H4c.5-1 2-2.5 2-6.5Z"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5.5c0 5-3 8-7 9.5-4-1.5-7-4.5-7-9.5V6l7-3Z"/><path d="m9 12 2 2 4-4.5"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-rain" viewBox="0 0 24 24"><path d="M7 15a4 4 0 0 1 .6-8A5.5 5.5 0 0 1 18 8.5a3.5 3.5 0 0 1 .2 6.5"/><path d="M8.5 18.5 7.5 21M12.5 18.5 11.5 21M16.5 18.5 15.5 21"/></symbol>
+  <symbol id="i-camera-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M8.5 7H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"/><path d="M10 7V5.5A1.5 1.5 0 0 1 11.5 4h4A1.5 1.5 0 0 1 17 5.5V7h1a2 2 0 0 1 2 2"/></symbol>
+  <symbol id="i-bike" viewBox="0 0 24 24"><circle cx="5.5" cy="17" r="3.2"/><circle cx="18.5" cy="17" r="3.2"/><path d="M8.4 17h5.2l-2-5.5H9"/><path d="m13.6 11.5 2.4 5.5M14 8h3l1.5 9M12.5 6h2"/></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24"><path d="M4 16v-3l1.8-5A2 2 0 0 1 7.7 7h8.6a2 2 0 0 1 1.9 1.3L20 14v3"/><path d="M3 13h18"/><circle cx="7.5" cy="17.5" r="1.6"/><circle cx="16.5" cy="17.5" r="1.6"/><path d="M4 18.5h3M17 18.5h3"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5 13.6 9 19 10.6 13.6 12.2 12 17.7 10.4 12.2 5 10.6 10.4 9 12 3.5Z"/><path d="M18.5 16.5 19.2 18.8 21.5 19.5 19.2 20.2 18.5 22.5 17.8 20.2 15.5 19.5 17.8 18.8 18.5 16.5Z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 4 21 19.5H3L12 4Z"/><path d="M12 10v4.5M12 17.4v.2"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6h5a3.5 3.5 0 0 1 0 7h-3a3.5 3.5 0 0 0 0 7h2"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s6.5-6 6.5-11a6.5 6.5 0 1 0-13 0C5.5 15 12 21 12 21Z"/><circle cx="12" cy="10" r="2.4"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 8.2v.2"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 8.5 4.5L12 12 3.5 7.5 12 3Z"/><path d="m4 12.2 8 4.3 8-4.3M4 16.7l8 4.3 8-4.3"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6"/><path d="M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="10.5" rx="2.5"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 6.3A9.7 9.7 0 0 1 12 6.2c5 0 8.5 4.4 9.4 5.8-.4.7-1.5 2.2-3.2 3.6M6.2 8.2C4.3 9.7 3.2 11.2 2.6 12c.9 1.4 4.4 5.8 9.4 5.8 1.4 0 2.7-.35 3.8-.9"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 14.5a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1A1.7 1.7 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.9 1.4Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 6.4"/><path d="M20 4.5V11h-6.5"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12 20 4l-6 16-3.2-7.2L4 12Z"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12L16 12h5"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3 2.5-5.2 5.5-5.2s5.5 2.2 5.5 5.2"/><path d="M16 5.3a3.2 3.2 0 0 1 0 5.9M17.5 15.2c2 .6 3.5 2.4 3.5 4.8"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1 .6-8A5.5 5.5 0 0 1 18 11.5a3.5 3.5 0 0 1 .2 6.5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5 19 12 7 19.5v-15Z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 4.5v15M16 4.5v15"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20 4c-9 0-15 3.5-15 10a6 6 0 0 0 6 6c6.5 0 9-6 9-16Z"/><path d="M4 20c1.5-5 5-8.5 10-10.5"/></symbol>
+  <symbol id="i-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V13M12 16.3v.2"/></symbol>
+  <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 4v16M6 14l6 6 6-6"/></symbol>
+  <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 20V4M6 10l6-6 6 6"/></symbol>
+</svg>
+
+<!-- ============================ STAGE (APP MODE) ============================ -->
+<div class="stage">
+
+  <aside class="rail rail--left" aria-label="Điều hướng prototype">
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><path d="M7 24V13a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v11" fill="none" stroke="currentColor" stroke-width="2.6"/><circle cx="16" cy="11" r="2.1" fill="currentColor"/><circle cx="16" cy="17" r="2.1" fill="currentColor" opacity=".45"/><circle cx="16" cy="23" r="2.1" fill="currentColor" opacity=".2"/></svg>
+      </span>
+      <span class="brand__text">MotoFlow<small>TP. Hồ Chí Minh</small></span>
+    </div>
+
+    <p class="rail__label">Màn hình</p>
+    <nav class="screens-nav" aria-label="Danh sách màn hình">
+      <button type="button" data-goto="home" class="is-active"><span class="nav__idx">01</span> Hôm nay</button>
+      <button type="button" data-goto="map"><span class="nav__idx">02</span> Bản đồ dự báo</button>
+      <button type="button" data-goto="node"><span class="nav__idx">03</span> Nút giao</button>
+      <button type="button" data-goto="plans"><span class="nav__idx">04</span> Kế hoạch đèn</button>
+      <button type="button" data-goto="alerts"><span class="nav__idx">05</span> Cảnh báo</button>
+      <button type="button" data-goto="safety"><span class="nav__idx">06</span> An toàn &amp; dữ liệu</button>
+      <button type="button" data-goto="assistant"><span class="nav__idx">07</span> Trợ lý AI</button>
+    </nav>
+
+    <p class="rail__label">Kịch bản mô phỏng</p>
+    <div class="scenario-switch" role="group" aria-label="Kịch bản">
+      <button type="button" data-scenario="normal" class="is-active">Bình thường</button>
+      <button type="button" data-scenario="rain">Mưa lớn</button>
+      <button type="button" data-scenario="surge">+30% lưu lượng</button>
+      <button type="button" data-scenario="camera">Camera lỗi</button>
+    </div>
+
+    <div class="rail__bottom">
+      <button type="button" class="btn btn--ghost btn--block" id="toggleTheme">
+        <svg class="icon"><use href="#i-sun"/></svg><span data-theme-label>Chế độ sáng</span>
+      </button>
+      <button type="button" class="btn btn--ghost btn--block" id="openOps">
+        <svg class="icon"><use href="#i-layers"/></svg> Bảng điều hành
+      </button>
+      <p class="rail__note">Prototype tĩnh · dữ liệu mô phỏng<br/>Không kết nối đèn thật</p>
+    </div>
+  </aside>
+
+  <div class="device-wrap">
+    <div class="device" id="device">
+      <div class="device__notch" aria-hidden="true"></div>
+      <div class="statusbar" aria-hidden="true">
+        <span class="statusbar__time">07:41</span>
+        <span class="statusbar__right">
+          <svg viewBox="0 0 18 12" class="sb-signal"><rect x="0" y="7" width="2.6" height="5" rx="1"/><rect x="4" y="5" width="2.6" height="7" rx="1"/><rect x="8" y="2.5" width="2.6" height="9.5" rx="1"/><rect x="12" y="0" width="2.6" height="12" rx="1" opacity=".35"/></svg>
+          <svg viewBox="0 0 18 12" class="sb-batt"><rect x="1" y="1.5" width="13" height="9" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="2.6" y="3.1" width="8.4" height="5.8" rx="1.3" fill="currentColor"/><path d="M15.6 4.6v2.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span>4G</span>
+        </span>
+      </div>
+
+      <main class="viewport" id="viewport">
+
+        <!-- ========================= 01 HOME ========================= -->
+        <section class="screen" data-screen="home" aria-labelledby="h-home">
+          <div class="apphead">
+            <div>
+              <p class="apphead__eyebrow">Thứ Hai, 09/11 · Cao điểm sáng</p>
+              <h1 id="h-home" class="apphead__title">Chào Minh</h1>
+            </div>
+            <button type="button" class="iconbtn" data-goto="assistant" aria-label="Mở trợ lý MotoFlow">
+              <svg class="icon"><use href="#i-spark"/></svg>
+              <span class="dot dot--ai" aria-hidden="true"></span>
+            </button>
+          </div>
+
+          <div class="banner banner--bad" id="degradedBanner" hidden>
+            <svg class="icon"><use href="#i-camera-off"/></svg>
+            <div><strong>Chế độ an toàn</strong><span>Camera NTP mất tín hiệu · kế hoạch cố định 90 giây</span></div>
+            <button type="button" class="linkbtn" data-goto="safety">Xem</button>
+          </div>
+
+          <article class="card card--hero">
+            <header class="card__head">
+              <div>
+                <p class="eyebrow">Tuyến đang theo dõi</p>
+                <h2 class="card__title">Nhà → Văn phòng Quận 1</h2>
+                <p class="meta"><svg class="icon icon--sm"><use href="#i-route"/></svg> Võ Văn Kiệt · <span data-bind="distance">8,4 km</span></p>
+              </div>
+              <span class="state-chip" data-state-chip="route"><span class="dot"></span><span data-bind="routeStateLabel">Chậm</span></span>
+            </header>
+
+            <div class="eta-row">
+              <div class="eta">
+                <span class="eta__value" data-bind="eta">22</span>
+                <span class="eta__unit">phút</span>
+              </div>
+              <div class="eta__meta">
+                <span class="delta" data-bind="etaDelta">+6 phút</span>
+                <span class="meta">so với giờ thường · đến <span data-bind="arriveAt">08:03</span></span>
+              </div>
+            </div>
+
+            <div class="progress" role="img" aria-label="Tiến trình tuyến đường">
+              <span class="progress__fill" style="width:42%"></span>
+              <span class="progress__pin" style="left:42%"></span>
+            </div>
+
+            <div class="spark-wrap">
+              <div class="spark-head">
+                <span class="eyebrow">Dự báo 15 phút tới</span>
+                <span class="chip chip--ai"><svg class="icon icon--xs"><use href="#i-spark"/></svg> AI</span>
+              </div>
+              <div class="spark" id="routeSpark" role="img" aria-label="Biểu đồ dự báo thời gian đi tuyến đường"></div>
+              <p class="spark-note" data-bind="routeForecastNote">Chậm hơn 4 phút nếu khởi hành sau 07:55</p>
+            </div>
+
+            <div class="hero-actions">
+              <button type="button" class="btn btn--primary" data-goto="map">
+                <svg class="icon"><use href="#i-map"/></svg> Bản đồ dự báo
+              </button>
+              <button type="button" class="btn btn--ghost" id="departNow">
+                <svg class="icon"><use href="#i-play"/></svg> Đi ngay
+              </button>
+            </div>
+          </article>
+
+          <article class="card">
+            <header class="card__head">
+              <div>
+                <p class="eyebrow">Làn sóng xanh thích ứng</p>
+                <h2 class="card__title" data-bind="gwSummary">Đi trong 2 phút → xanh 3/4 nút</h2>
+              </div>
+              <span class="badge badge--ai">AI</span>
+            </header>
+            <ul class="wave" id="waveList"></ul>
+            <div class="card__foot">
+              <span class="meta"><svg class="icon icon--sm"><use href="#i-clock"/></svg> Xuất phát tốt nhất <strong data-bind="bestDeparture">07:44</strong></span>
+              <span class="chip chip--ok"><span data-bind="saved">-4 phút</span></span>
+            </div>
+          </article>
+
+          <div class="row-actions">
+            <button type="button" class="tile" data-goto="plans">
+              <svg class="icon"><use href="#i-sliders"/></svg>
+              <span>Kế hoạch đèn</span>
+              <em data-bind="planCount">1 cần duyệt</em>
+            </button>
+            <button type="button" class="tile" data-goto="safety">
+              <svg class="icon"><use href="#i-shield"/></svg>
+              <span>Lớp an toàn</span>
+              <em id="safetyTileNote">Suy giảm 1 nút</em>
+            </button>
+          </div>
+
+          <div class="section-head">
+            <h2 class="h2">Cảnh báo gần bạn</h2>
+            <button type="button" class="linkbtn" data-goto="alerts">Tất cả</button>
+          </div>
+          <div class="alert-list" id="homeAlerts"></div>
+
+          <p class="footnote">Dữ liệu mô phỏng · cập nhật <span data-bind="updated">07:41:20</span> · không lưu video</p>
+        </section>
+
+        <!-- ========================= 02 MAP ========================= -->
+        <section class="screen" data-screen="map" aria-labelledby="h-map">
+          <div class="map-shell">
+            <div class="map-top">
+              <button type="button" class="iconbtn iconbtn--glass" data-goto="home" aria-label="Quay lại">
+                <svg class="icon"><use href="#i-back"/></svg>
+              </button>
+              <div class="map-title">
+                <h1 id="h-map">Bản đồ dự báo</h1>
+                <p class="meta">Trục Võ Văn Kiệt · 15 phút tới</p>
+              </div>
+              <button type="button" class="iconbtn iconbtn--glass" id="refreshMap" aria-label="Làm mới dữ liệu">
+                <svg class="icon"><use href="#i-refresh"/></svg>
+              </button>
+            </div>
+
+            <div class="map-canvas" id="mapCanvas" role="img" aria-label="Sơ đồ lược đồ trục Võ Văn Kiệt với 4 nút giao, màu theo mức ùn tắc">
+              <div class="map-filters" role="group" aria-label="Khung thời gian dự báo">
+                <button type="button" class="chip is-active" data-horizon="15">+15 phút</button>
+                <button type="button" class="chip" data-horizon="30">+30 phút</button>
+                <button type="button" class="chip" data-horizon="60">+60 phút</button>
+              </div>
+              <div class="legend" aria-hidden="true">
+                <span><i class="dot dot--ok"></i>Thông thoáng</span>
+                <span><i class="dot dot--warn"></i>Chậm</span>
+                <span><i class="dot dot--bad"></i>Ùn tắc</span>
+              </div>
+              <svg class="map-svg" id="mapSvg" viewBox="0 0 390 380" preserveAspectRatio="xMidYMid slice"></svg>
+            </div>
+
+            <div class="map-sheet">
+              <div class="sheet__handle" aria-hidden="true"></div>
+              <div class="sheet__head">
+                <div>
+                  <p class="eyebrow">Nút giao đang chọn</p>
+                  <h2 class="card__title" data-bind="mapNodeName">Võ Văn Kiệt – Nguyễn Tri Phương</h2>
+                  <p class="meta"><span data-bind="mapNodeDistrict">Quận 5</span> · chu kỳ <span data-bind="mapCycle">110</span> giây</p>
+                </div>
+                <span class="state-chip" data-state-chip="mapNode"><span class="dot"></span><span data-bind="mapNodeState">Ùn tắc</span></span>
+              </div>
+
+              <div class="stat-row">
+                <div class="stat"><span class="stat__label">Hàng đợi</span><span class="stat__value"><span data-bind="mapQueue">148</span><small>m</small></span></div>
+                <div class="stat"><span class="stat__label">Chờ TB</span><span class="stat__value"><span data-bind="mapDelay">52</span><small>s</small></span></div>
+                <div class="stat"><span class="stat__label">Tin cậy</span><span class="stat__value"><span data-bind="mapConf">78</span><small>%</small></span></div>
+              </div>
+
+              <div class="spark-wrap spark-wrap--tight">
+                <div class="spark-head"><span class="eyebrow">Hàng đợi dự báo</span><span class="chip chip--warn">Tăng</span></div>
+                <div class="spark" id="mapSpark" role="img" aria-label="Hàng đợi dự báo 15 phút tới"></div>
+              </div>
+
+              <button type="button" class="btn btn--primary btn--block" data-goto="node">
+                Chi tiết nút giao <svg class="icon"><use href="#i-chevron"/></svg>
+              </button>
+              <p class="footnote">Sơ đồ lược đồ, không theo tỉ lệ · chạm nút giao để chọn</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================= 03 NODE ========================= -->
+        <section class="screen screen--pad" data-screen="node" aria-labelledby="h-node">
+          <div class="apphead apphead--sub">
+            <button type="button" class="iconbtn" data-goto="map" aria-label="Quay lại bản đồ">
+              <svg class="icon"><use href="#i-back"/></svg>
+            </button>
+            <div class="apphead__grow">
+              <p class="apphead__eyebrow">Nút giao · Quận 5</p>
+              <h1 id="h-node" class="apphead__title">Võ Văn Kiệt – NTP</h1>
+            </div>
+            <button type="button" class="iconbtn" data-goto="assistant" aria-label="Hỏi trợ lý vì sao">
+              <svg class="icon"><use href="#i-spark"/></svg>
+            </button>
+          </div>
+
+          <article class="card card--phase">
+            <div class="phase">
+              <div class="ring" id="signalRing" role="img" aria-label="Đếm ngược pha đèn hiện tại">
+                <svg viewBox="0 0 108 108" class="ring__svg">
+                  <circle class="ring__track" cx="54" cy="54" r="46"/>
+                  <circle class="ring__value" cx="54" cy="54" r="46" id="ringValue"/>
+                </svg>
+                <div class="ring__center">
+                  <span class="ring__num" data-bind="ringNum">21</span>
+                  <span class="ring__unit">giây</span>
+                </div>
+              </div>
+              <div class="phase__info">
+                <span class="state-chip" data-state-chip="ok"><span class="dot"></span><span data-bind="phaseLabel">Xanh · Đông–Tây</span></span>
+                <h2 class="card__title">Pha hiện tại</h2>
+                <p class="meta" data-bind="phaseNext">Vàng 3s → Toàn đỏ 2s</p>
+                <p class="meta">Chu kỳ <strong><span data-bind="cycle">110</span> giây</strong> · nguồn <strong>AI thích ứng</strong></p>
+              </div>
+            </div>
+          </article>
+
+          <div class="section-head">
+            <h2 class="h2">4 nhánh · hàng đợi</h2>
+            <span class="meta" data-bind="updated">07:41:20</span>
+          </div>
+          <div class="approach-list" id="approachList"></div>
+
+          <article class="card">
+            <header class="card__head">
+              <div>
+                <p class="eyebrow">Kế hoạch đèn</p>
+                <h2 class="card__title">Đang áp dụng vs AI đề xuất</h2>
+              </div>
+              <span class="badge badge--ai">Cần duyệt</span>
+            </header>
+
+            <div class="compare">
+              <div class="compare__col">
+                <p class="eyebrow">Đang áp dụng</p>
+                <p class="compare__cycle"><span data-bind="appliedCycle">110</span><small>giây</small></p>
+                <ul class="compare__greens" data-bind="appliedGreens"></ul>
+                <p class="meta">AI thích ứng · 07:35</p>
+              </div>
+              <div class="compare__col compare__col--ai">
+                <p class="eyebrow">AI đề xuất</p>
+                <p class="compare__cycle"><span data-bind="proposedCycle">104</span><small>giây</small></p>
+                <ul class="compare__greens" data-bind="proposedGreens"></ul>
+                <p class="meta"><span data-bind="proposedSource">07:41</span> · tin cậy <span data-bind="proposedConf">78</span>%</p>
+              </div>
+            </div>
+
+            <p class="gain"><svg class="icon icon--sm"><use href="#i-activity"/></svg> Ước tính <strong data-bind="proposedGain">-18% thời gian chờ TB</strong> · giữ nguyên vàng 3s và toàn đỏ 2s</p>
+
+            <div class="hero-actions">
+              <button type="button" class="btn btn--primary" id="approvePlan">
+                <svg class="icon"><use href="#i-check"/></svg> Phê duyệt
+              </button>
+              <button type="button" class="btn btn--ghost" id="rejectPlan">
+                <svg class="icon"><use href="#i-x"/></svg> Từ chối
+              </button>
+            </div>
+          </article>
+
+          <article class="card">
+            <header class="card__head">
+              <div>
+                <p class="eyebrow">Hàng đợi dự báo · 15 phút</p>
+                <h2 class="card__title">Hướng Tây (từ Bình Chánh)</h2>
+              </div>
+              <span class="chip chip--ai"><svg class="icon icon--xs"><use href="#i-spark"/></svg> STGCN</span>
+            </header>
+            <div class="chart" id="nodeChart" role="img" aria-label="Biểu đồ hàng đợi thực tế và dự báo 15 phút"></div>
+            <div class="legend legend--inline">
+              <span><i class="line line--actual"></i>Thực tế</span>
+              <span><i class="line line--forecast"></i>Dự báo</span>
+              <span><i class="band"></i>Khoảng tin cậy 80%</span>
+            </div>
+            <details class="data-table">
+              <summary>Xem bảng số</summary>
+              <div class="table-wrap"><table id="nodeTable"></table></div>
+            </details>
+            <p class="footnote">MAPE 5 phút: 7,6% · 15 phút: 11,4% trên tập kiểm chứng tách theo thời gian</p>
+          </article>
+
+          <p class="footnote">Đề xuất cần kỹ sư phê duyệt · không tự động gửi xuống đèn</p>
+        </section>
+
+        <!-- ========================= 04 PLANS ========================= -->
+        <section class="screen screen--pad" data-screen="plans" aria-labelledby="h-plans">
+          <div class="apphead apphead--sub">
+            <button type="button" class="iconbtn" data-goto="home" aria-label="Quay lại">
+              <svg class="icon"><use href="#i-back"/></svg>
+            </button>
+            <div class="apphead__grow">
+              <p class="apphead__eyebrow">Điều phối · chế độ đề xuất</p>
+              <h1 id="h-plans" class="apphead__title">Kế hoạch đèn</h1>
+            </div>
+            <span class="badge badge--warn">1 cần duyệt</span>
+          </div>
+
+          <div class="notice">
+            <svg class="icon"><use href="#i-info"/></svg>
+            <p>MotoFlow chỉ <strong>đề xuất</strong>. Kế hoạch được gửi xuống bộ điều khiển sau khi kỹ sư phê duyệt và kiểm tra tại chỗ.</p>
+          </div>
+
+          <div class="seg" role="group" aria-label="Lọc kế hoạch">
+            <button type="button" class="seg__btn is-active" data-plan-filter="all">Tất cả</button>
+            <button type="button" class="seg__btn" data-plan-filter="review">Cần duyệt</button>
+            <button type="button" class="seg__btn" data-plan-filter="applied">Đang chạy</button>
+          </div>
+
+          <div class="plan-list" id="planList"></div>
+
+          <article class="card card--safety">
+            <header class="card__head">
+              <div>
+                <p class="eyebrow">Ràng buộc an toàn đang khoá</p>
+                <h2 class="card__title">Không thể vượt giới hạn</h2>
+              </div>
+              <svg class="icon icon--lg c-ok"><use href="#i-shield"/></svg>
+            </header>
+            <ul class="limits" id="limitList"></ul>
+          </article>
+
+          <p class="footnote">Dữ liệu mô phỏng · mọi thay đổi đều ghi log để hậu kiểm</p>
+        </section>
+
+        <!-- ========================= 05 ALERTS ========================= -->
+        <section class="screen screen--pad" data-screen="alerts" aria-labelledby="h-alerts">
+          <div class="apphead">
+            <div>
+              <p class="apphead__eyebrow">Cập nhật 07:41</p>
+              <h1 id="h-alerts" class="apphead__title">Cảnh báo</h1>
+            </div>
+            <button type="button" class="iconbtn" aria-label="Tuỳ chọn thông báo">
+              <svg class="icon"><use href="#i-sliders"/></svg>
+            </button>
+          </div>
+
+          <div class="chips" role="group" aria-label="Lọc cảnh báo">
+            <button type="button" class="chip is-active" data-alert-filter="all">Tất cả</button>
+            <button type="button" class="chip" data-alert-filter="jam">Ùn tắc</button>
+            <button type="button" class="chip" data-alert-filter="rain">Mưa</button>
+            <button type="button" class="chip" data-alert-filter="incident">Sự cố</button>
+            <button type="button" class="chip" data-alert-filter="camera">Thiết bị</button>
+          </div>
+
+          <div class="alert-list alert-list--page" id="alertPage"></div>
+
+          <p class="footnote">Cảnh báo dựa trên dự báo 5–15 phút, không phải sự kiện đã xảy ra</p>
+        </section>
+
+        <!-- ========================= 06 SAFETY ========================= -->
+        <section class="screen screen--pad" data-screen="safety" aria-labelledby="h-safety">
+          <div class="apphead">
+            <div>
+              <p class="apphead__eyebrow">Lớp 4 · bắt buộc</p>
+              <h1 id="h-safety" class="apphead__title">An toàn &amp; dữ liệu</h1>
+            </div>
+            <span class="badge badge--bad" id="safetyBadge">Suy giảm</span>
+          </div>
+
+          <article class="card card--status" id="safetyStatus">
+            <div class="status-line">
+              <svg class="icon icon--lg"><use href="#i-shield"/></svg>
+              <div>
+                <p class="eyebrow">Trạng thái hệ thống</p>
+                <h2 class="card__title" data-bind="safetyStatusTitle">1 thiết bị biên mất tín hiệu</h2>
+                <p class="meta" data-bind="safetyStatusNote">Nút giao NTP đang chạy kế hoạch cố định 90 giây. AI bị khoá cho nút này.</p>
+              </div>
+            </div>
+            <div class="status-grid">
+              <div><span class="stat__label">Nút giao</span><span class="stat__value">4</span></div>
+              <div><span class="stat__label">AI hoạt động</span><span class="stat__value">3</span></div>
+              <div><span class="stat__label">Cảnh báo mở</span><span class="stat__value">2</span></div>
+            </div>
+          </article>
+
+          <div class="section-head"><h2 class="h2">Giới hạn an toàn</h2><span class="meta">khoá cứng</span></div>
+          <ul class="limits limits--grid" id="safetyLimits"></ul>
+
+          <div class="section-head"><h2 class="h2">Thiết bị biên</h2><span class="meta">Jetson · tại chỗ</span></div>
+          <ul class="cams" id="camList"></ul>
+
+          <article class="card">
+            <header class="card__head">
+              <div>
+                <p class="eyebrow">Quyền riêng tư</p>
+                <h2 class="card__title">Không lưu video, không nhận dạng</h2>
+              </div>
+              <svg class="icon icon--lg c-muted"><use href="#i-eye-off"/></svg>
+            </header>
+            <ul class="check-list">
+              <li><svg class="icon icon--sm c-ok"><use href="#i-check"/></svg> Video xử lý tại thiết bị biên, không gửi lên cloud</li>
+              <li><svg class="icon icon--sm c-ok"><use href="#i-check"/></svg> Chỉ gửi số đếm tổng hợp: lưu lượng, hàng đợi, tốc độ</li>
+              <li><svg class="icon icon--sm c-ok"><use href="#i-check"/></svg> Không nhận dạng biển số, không nhận dạng khuôn mặt</li>
+              <li><svg class="icon icon--sm c-ok"><use href="#i-check"/></svg> Dữ liệu tổng hợp giữ 30 ngày rồi tự xoá</li>
+            </ul>
+            <p class="footnote">Ghi rõ trong hồ sơ dữ liệu của bài dự thi và xin phép khi quay video thực địa.</p>
+          </article>
+
+          <article class="card">
+            <header class="card__head">
+              <div>
+                <p class="eyebrow">Dự phòng</p>
+                <h2 class="card__title">Tự quay về kế hoạch cố định</h2>
+              </div>
+              <span class="switch is-on" role="switch" aria-checked="true" tabindex="0" aria-label="Tự động quay về kế hoạch cố định"></span>
+            </header>
+            <p class="body-text">Khi camera mất tín hiệu quá 30 giây, số liệu bất thường hoặc mất kết nối trung tâm, nút giao tự chạy chu kỳ cố định 90 giây đã được cơ quan quản lý phê duyệt. Kỹ sư nhận cảnh báo ngay lập tức.</p>
+          </article>
+
+          <p class="footnote">Dữ liệu mô phỏng · thời gian giữ 30 ngày là cấu hình mẫu</p>
+        </section>
+
+        <!-- ========================= 07 ASSISTANT ========================= -->
+        <section class="screen screen--chat" data-screen="assistant" aria-labelledby="h-assistant">
+          <div class="apphead apphead--sub">
+            <button type="button" class="iconbtn" data-goto="home" aria-label="Quay lại">
+              <svg class="icon"><use href="#i-back"/></svg>
+            </button>
+            <div class="apphead__grow">
+              <p class="apphead__eyebrow">Giải thích minh bạch</p>
+              <h1 id="h-assistant" class="apphead__title">Trợ lý MotoFlow</h1>
+            </div>
+            <span class="badge badge--ai"><svg class="icon icon--xs"><use href="#i-spark"/></svg> AI</span>
+          </div>
+
+          <div class="chat" id="chat" aria-live="polite">
+            <div class="msg msg--bot">
+              <span class="msg__avatar" aria-hidden="true"><svg class="icon icon--sm"><use href="#i-spark"/></svg></span>
+              <div class="msg__body">
+                <p>Chào Minh. Mình giải thích các đề xuất của hệ thống bằng số liệu và giới hạn an toàn. Bạn muốn hỏi gì?</p>
+              </div>
+            </div>
+            <div class="msg msg--user"><div class="msg__body"><p>Vì sao đèn xanh hướng Tây vừa dài hơn?</p></div></div>
+            <div class="msg msg--bot">
+              <span class="msg__avatar" aria-hidden="true"><svg class="icon icon--sm"><use href="#i-spark"/></svg></span>
+              <div class="msg__body">
+                <p>Hàng đợi hướng Tây đang <strong>148 m</strong> và dự báo tăng lên <strong>118 m</strong> trong 15 phút tới. Mô hình đề xuất tăng xanh Tây <strong>22 → 34 giây</strong>, giảm hướng Nam 6 giây, chu kỳ còn <strong>104 giây</strong>.</p>
+                <p class="msg__note">Vẫn trong giới hạn an toàn: xanh tối thiểu 12s, tối đa 45s, vàng 3s, toàn đỏ 2s.</p>
+              </div>
+            </div>
+            <div class="msg msg--user"><div class="msg__body"><p>Camera mất tín hiệu thì sao?</p></div></div>
+            <div class="msg msg--bot">
+              <span class="msg__avatar" aria-hidden="true"><svg class="icon icon--sm"><use href="#i-spark"/></svg></span>
+              <div class="msg__body">
+                <p>Nút giao tự chuyển về <strong>kế hoạch cố định 90 giây</strong>, khoá đề xuất AI và gửi cảnh báo cho kỹ sư trực. Không có lệnh nào tự động gửi xuống đèn thật.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat__suggest" id="suggestions"></div>
+
+          <form class="composer" id="chatForm">
+            <label class="sr-only" for="chatInput">Câu hỏi cho trợ lý</label>
+            <input id="chatInput" type="text" autocomplete="off" placeholder="Hỏi về dự báo, đèn, dữ liệu…" />
+            <button type="submit" class="iconbtn iconbtn--primary" aria-label="Gửi câu hỏi">
+              <svg class="icon"><use href="#i-send"/></svg>
+            </button>
+          </form>
+          <p class="footnote footnote--center">Trợ lý chỉ đọc dữ liệu tổng hợp · không điều khiển đèn</p>
+        </section>
+
+      </main>
+
+      <nav class="tabbar" aria-label="Điều hướng chính">
+        <button type="button" data-goto="home" class="is-active" aria-label="Hôm nay"><svg class="icon"><use href="#i-home"/></svg><span>Hôm nay</span></button>
+        <button type="button" data-goto="map" aria-label="Bản đồ"><svg class="icon"><use href="#i-map"/></svg><span>Bản đồ</span></button>
+        <button type="button" data-goto="node" aria-label="Nút giao"><svg class="icon"><use href="#i-signal"/></svg><span>Nút giao</span></button>
+        <button type="button" data-goto="alerts" aria-label="Cảnh báo"><svg class="icon"><use href="#i-bell"/></svg><span>Cảnh báo</span><i class="tab-badge">3</i></button>
+        <button type="button" data-goto="safety" aria-label="An toàn"><svg class="icon"><use href="#i-shield"/></svg><span>An toàn</span></button>
+      </nav>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <p class="device-caption">MotoFlow · iPhone 14 Pro (390×844) · <span id="captionNote">kịch bản: bình thường</span></p>
+  </div>
+
+  <aside class="rail rail--right" aria-label="Ghi chú thiết kế">
+    <div class="notes">
+      <p class="rail__label">Ghi chú thiết kế</p>
+      <h2 id="notesTitle">Hôm nay</h2>
+      <p id="notesBody">Người đi đường cần một câu trả lời trong 3 giây: đi bây giờ có kẹt không, nên đi lúc nào.</p>
+      <ul id="notesList">
+        <li>ETA là số lớn nhất trên màn hình; delta so với giờ thường đặt cạnh.</li>
+        <li>Làn sóng xanh biến dự báo thành hành động: xuất phát lúc nào.</li>
+        <li>Cảnh báo dựa trên dự báo, có nhãn thời gian rõ ràng.</li>
+      </ul>
+      <p class="rail__label">Trạng thái đã bao phủ</p>
+      <div class="state-pills">
+        <span class="state-chip" data-state-chip="ok"><span class="dot"></span>Thông thoáng</span>
+        <span class="state-chip" data-state-chip="warn"><span class="dot"></span>Chậm</span>
+        <span class="state-chip" data-state-chip="bad"><span class="dot"></span>Ùn tắc</span>
+        <span class="state-chip" data-state-chip="ai"><span class="dot"></span>AI đề xuất</span>
+      </div>
+      <p class="rail__label">Liên kết</p>
+      <a class="linkbtn" href="design-system/motoflow/MASTER.md">Design system (MASTER.md)</a>
+      <p class="rail__note">Font self-host: Fira Sans + Fira Code.<br/>Không build step, mở trực tiếp index.html.</p>
+    </div>
+  </aside>
+</div>
+
+<!-- ============================ OPS CONSOLE ============================ -->
+<div class="ops" id="ops" hidden>
+  <header class="ops-top">
+    <div class="ops-brand">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><path d="M7 24V13a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v11" fill="none" stroke="currentColor" stroke-width="2.6"/><circle cx="16" cy="11" r="2.1" fill="currentColor"/><circle cx="16" cy="17" r="2.1" fill="currentColor" opacity=".45"/><circle cx="16" cy="23" r="2.1" fill="currentColor" opacity=".2"/></svg>
+      </span>
+      <strong>MotoFlow Ops</strong>
+      <span class="ops-sep"></span>
+      <span class="meta">Trung tâm điều khiển · TP.HCM</span>
+    </div>
+    <div class="ops-top__right">
+      <span class="live"><i></i> Trực tuyến · 07:41:20</span>
+      <div class="seg seg--sm" role="group" aria-label="Chế độ">
+        <button type="button" class="seg__btn is-active">Đề xuất</button>
+        <button type="button" class="seg__btn">Mô phỏng</button>
+      </div>
+      <button type="button" class="btn btn--ghost btn--sm" id="closeOps">
+        <svg class="icon"><use href="#i-back"/></svg> Về mobile
+      </button>
+    </div>
+  </header>
+
+  <div class="ops-grid">
+    <aside class="ops-side">
+      <nav class="ops-nav" aria-label="Khu vực điều hành">
+        <a href="#" class="is-active"><svg class="icon"><use href="#i-activity"/></svg> Tổng quan</a>
+        <a href="#"><svg class="icon"><use href="#i-map"/></svg> Bản đồ trục</a>
+        <a href="#"><svg class="icon"><use href="#i-signal"/></svg> Nút giao</a>
+        <a href="#"><svg class="icon"><use href="#i-sliders"/></svg> Kế hoạch đèn</a>
+        <a href="#"><svg class="icon"><use href="#i-bell"/></svg> Cảnh báo <em>3</em></a>
+        <a href="#"><svg class="icon"><use href="#i-shield"/></svg> An toàn</a>
+        <a href="#"><svg class="icon"><use href="#i-database"/></svg> Dữ liệu</a>
+      </nav>
+      <div class="ops-side__foot">
+        <p class="eyebrow">Trục đang xem</p>
+        <p class="ops-corridor">Võ Văn Kiệt</p>
+        <p class="meta">4 nút giao · 8,4 km</p>
+        <p class="meta">Cập nhật mỗi 5 giây</p>
+      </div>
+    </aside>
+
+    <main class="ops-main">
+      <div class="ops-head">
+        <div>
+          <p class="eyebrow">Tổng quan trục · cao điểm sáng</p>
+          <h1>Điều phối thích ứng</h1>
+        </div>
+        <div class="ops-head__actions">
+          <button type="button" class="btn btn--ghost btn--sm"><svg class="icon"><use href="#i-refresh"/></svg> Đồng bộ 07:41</button>
+          <button type="button" class="btn btn--primary btn--sm"><svg class="icon"><use href="#i-check"/></svg> Duyệt 1 đề xuất</button>
+        </div>
+      </div>
+
+      <div class="kpi-row" id="kpiRow"></div>
+
+      <section class="panel panel--chart">
+        <header class="panel__head">
+          <div>
+            <h2>Thời gian chờ trung bình · dự báo</h2>
+            <p class="meta">So sánh chu kỳ cố định với điều khiển thích ứng (mô phỏng SUMO)</p>
+          </div>
+          <div class="legend legend--inline">
+            <span><i class="line line--muted"></i>Cố định</span>
+            <span><i class="line line--brand"></i>Thích ứng</span>
+          </div>
+        </header>
+        <div class="chart chart--lg" id="opsChart" role="img" aria-label="Biểu đồ so sánh thời gian chờ giữa chu kỳ cố định và điều khiển thích ứng"></div>
+      </section>
+
+      <div class="ops-cols">
+        <section class="panel">
+          <header class="panel__head">
+            <h2>Trạng thái 4 nút giao</h2>
+            <span class="meta">Chu kỳ 110s · vàng 3s · toàn đỏ 2s</span>
+          </header>
+          <div class="node-table" id="opsNodes"></div>
+        </section>
+
+        <section class="panel">
+          <header class="panel__head">
+            <h2>Hàng đợi theo nhánh</h2>
+            <span class="meta">mét · hiện tại</span>
+          </header>
+          <div class="queue-bars" id="opsQueues"></div>
+        </section>
+      </div>
+
+      <div class="ops-cols ops-cols--3">
+        <section class="panel">
+          <header class="panel__head"><h2>Đề xuất chờ duyệt</h2><span class="badge badge--ai">AI</span></header>
+          <div class="approve-card">
+            <div class="approve-card__head">
+              <strong>Nguyễn Tri Phương</strong>
+              <span class="chip chip--warn">Tin cậy 78%</span>
+            </div>
+            <p class="meta">Chu kỳ 110 → 104s · xanh Tây +12s · xanh Nam −6s</p>
+            <p class="approve-card__gain">−18% chờ TB dự kiến</p>
+            <div class="approve-card__actions">
+              <button type="button" class="btn btn--primary btn--sm" id="opsApprove">Phê duyệt</button>
+              <button type="button" class="btn btn--ghost btn--sm">Từ chối</button>
+            </div>
+          </div>
+          <div class="approve-card approve-card--muted">
+            <div class="approve-card__head"><strong>Phạm Hùng</strong><span class="chip chip--ok">Đã tự áp dụng</span></div>
+            <p class="meta">Dịch pha +4s · tin cậy 87%</p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <header class="panel__head"><h2>Lớp an toàn</h2><span class="badge badge--bad">1 suy giảm</span></header>
+          <ul class="safety-mini">
+            <li><span>Camera Pasteur</span><span class="state-chip" data-state-chip="bad"><span class="dot"></span>Mất tín hiệu 2 phút</span></li>
+            <li><span>Chế độ nút Pasteur</span><span class="mono">Cố định 90s</span></li>
+            <li><span>Đề xuất bị khoá</span><span class="mono">1 nút</span></li>
+            <li><span>Vàng / toàn đỏ</span><span class="mono">3s / 2s</span></li>
+            <li><span>Xanh min / max</span><span class="mono">12s / 45s</span></li>
+          </ul>
+        </section>
+
+        <section class="panel">
+          <header class="panel__head"><h2>Chất lượng dữ liệu</h2><span class="meta">30 ngày</span></header>
+          <ul class="data-mini">
+            <li><span>FPS thiết bị biên</span><strong class="mono">24–25</strong></li>
+            <li><span>Sai số đếm xe (MAE)</span><strong class="mono">4,8%</strong></li>
+            <li><span>Độ trễ end-to-end</span><strong class="mono">1,9s</strong></li>
+            <li><span>Video lưu trữ</span><strong class="mono c-ok">0 byte</strong></li>
+            <li><span>Nguồn</span><strong class="mono">Mô phỏng</strong></li>
+          </ul>
+        </section>
+      </div>
+      <p class="ops-foot">Dữ liệu mô phỏng phục vụ prototype · Không có lệnh nào được gửi tới đèn thật · MotoFlow 2026</p>
+    </main>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
